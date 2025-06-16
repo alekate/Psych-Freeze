@@ -4,7 +4,10 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - CinemachineTarget
+  - Controllable Object
+  - SpawnPoint
+  - DoorSceneChanger
+  - Pickup
   layers:
   - Default
   - TransparentFX
