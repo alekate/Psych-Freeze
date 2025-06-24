@@ -19,7 +19,7 @@ public class PickupCounter : MonoBehaviour
 
     private void Update()
     {
-        //PickedUpAllPickups();
+        PickedUpAllPickupsInLevel();
     }
 
     public void UpdatePickupCounter()
@@ -31,16 +31,18 @@ public class PickupCounter : MonoBehaviour
         }
     }
 
-    /*public void PickedUpAllPickups()
+    public void PickedUpAllPickupsInLevel()
     {        
         if (currentPickups == allPickups)
         {
-            UIController.FinnishGameUI();
+            UIController.ReturnToOutsideWorldUI();
             if (Input.GetKeyDown(KeyCode.Space))
             {
                 menuController.LoadMainMenu();
             }
         }
-    }*/
+    }
+
+
 
 }

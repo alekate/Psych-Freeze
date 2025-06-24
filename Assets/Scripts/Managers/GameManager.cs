@@ -13,6 +13,8 @@ namespace Clase09
         private SceneReferences current;            // Referencia a la escena actual cargada (cuando hay más de una)
         private string lastSceneLoaded;
 
+        public string LastDoorEntered;
+
         private PickupCounter pickupCounter;
 
         ////////// SE INICIALIZA CUANDO SE CREA EL SINGLETON //////////
@@ -21,7 +23,7 @@ namespace Clase09
         {
             // Se suscribe al evento cuando se carga una nueva escena con SceneReferences
             SceneReferences.onLoadedScene += SceneReferences_onLoadedScene;
-            player = player = GameObject.FindWithTag("Player");
+            player = GameObject.FindWithTag("Player");
             pickupCounter = player.GetComponent<PickupCounter>();
         }
 
@@ -58,10 +60,30 @@ namespace Clase09
             main.previousState.position = player.transform.position;
             main.previousState.rotation = player.transform.rotation;
 
-            player.SetActive(false);
+            Scene existingScene = SceneManager.GetSceneByName(sceneToLoad);
+            if (existingScene.isLoaded)
+            {
+                SetAsActiveScene(sceneToLoad);
+                ActivateSceneObjects(existingScene);
+                SpawnPlayerAtCorrectLocation();
+                player.SetActive(true);
+                pickupCounter.UpdatePickupCounter();
+            }
+            else
+            {
+                player.SetActive(false);
 
-            CustomSceneManager.onLoadedScene += CustomSceneManager_onLoadedScene;
-            CustomSceneManager.Instance.ChangeSceneTo(sceneToLoad);
+                CustomSceneManager.onLoadedScene += CustomSceneManager_onLoadedScene;
+                CustomSceneManager.Instance.ChangeSceneTo(sceneToLoad);
+            }
+        }
+
+        private void ActivateSceneObjects(Scene scene)
+        {
+            foreach (GameObject go in scene.GetRootGameObjects())
+            {
+                go.SetActive(true);
+            }
         }
 
 
@@ -72,36 +94,46 @@ namespace Clase09
             CustomSceneManager.onLoadedScene -= CustomSceneManager_onLoadedScene;
 
             SetAsActiveScene(lastSceneLoaded);
-
-            // Buscar el spawn point en la nueva escena
-            GameObject spawn = GameObject.FindWithTag("SpawnPoint");
-            if (spawn != null)
-            {
-                player.transform.position = spawn.transform.position;
-                player.transform.rotation = spawn.transform.rotation;
-            }
-            else
-            {
-                Debug.LogWarning("No se encontró un objeto con el tag 'Spawn' en la nueva escena.");
-            }
-
+            SpawnPlayerAtCorrectLocation();
             pickupCounter.UpdatePickupCounter();
             player.SetActive(true);
         }
 
+        private void SpawnPlayerAtCorrectLocation()
+        {
+            string activeScene = SceneManager.GetActiveScene().name;
 
+            if (activeScene == "OutsideWorld")
+            {
+                GameObject door = GameObject.Find(LastDoorEntered);
+                if (door != null)
+                {
+                    Vector3 offset = door.transform.forward * 2f;
+                    player.transform.position = door.transform.position + offset;
+                    player.transform.rotation = Quaternion.LookRotation(door.transform.forward);
+                }
+            }
+            else
+            {
+                GameObject spawn = GameObject.FindWithTag("SpawnPoint");
+                if (spawn != null)
+                {
+                    player.transform.position = spawn.transform.position;
+                    player.transform.rotation = spawn.transform.rotation;
+                }
+            }
+        }
 
         ////////// DESCARGA LA ESCENA SECUNDARIA Y VUELVE A LA PRINCIPAL //////////
 
         public void Unload(string sceneToUnload)
         {
-            player.transform.position = main.previousState.position;
-            player.transform.rotation = main.previousState.rotation;
-
             SetAsActiveScene(main.gameObject.scene.name);
             main.SetActiveGo(true);
 
-            SceneManager.UnloadSceneAsync(lastSceneLoaded);
+            SpawnPlayerAtCorrectLocation();
+
+            SceneManager.UnloadSceneAsync(sceneToUnload);
         }
 
         ////////// CAMBIA LA ESCENA ACTIVA EN UNITY //////////

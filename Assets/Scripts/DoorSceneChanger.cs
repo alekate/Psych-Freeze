@@ -12,13 +12,15 @@ public class DoorSceneChanger : MonoBehaviour
 
     private void Start()
     {
-        FindObjectOfType<GameManager>();
+        gameManager = FindObjectOfType<GameManager>();
         sceneToUnload = SceneManager.GetActiveScene().name;
     }
 
     private void OnCollisionEnter(Collision collision)
     {
         if (hasChangedScene) return; // Previene múltiples cargas
+
+        gameManager.LastDoorEntered = gameObject.name;
 
         if (collision.gameObject.CompareTag("Player"))
         {

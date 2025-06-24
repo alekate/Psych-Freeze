@@ -17,6 +17,10 @@ public class UIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI youWinText;
     [SerializeField] private TextMeshProUGUI youLoseText;
 
+    [SerializeField] private TextMeshProUGUI returnToOutsideWorldText;
+    [SerializeField] private TextMeshProUGUI countdownOutsideWorldText;
+
+
     private void Start()
     {
         youLoseText.gameObject.SetActive(false);
@@ -34,7 +38,9 @@ public class UIController : MonoBehaviour
         {
             currentPickupText.gameObject.SetActive(false);
             allPickupsText.gameObject.SetActive(false);
+            returnToOutsideWorldText.gameObject.SetActive(false);
         }
+
         UpdatePickupUI();
     }
 
@@ -47,6 +53,11 @@ public class UIController : MonoBehaviour
     public void FinnishGameUI()
     {
         youWinText.gameObject.SetActive(true);
+    }
+
+    public void ReturnToOutsideWorldUI()
+    {
+        returnToOutsideWorldText.gameObject.SetActive(true);
     }
 
     public void LoseGameUI()
