@@ -3,86 +3,122 @@ using UnityEngine;
 
 public class RaycastShoot_ObjectController : MonoBehaviour
 {
+
+    //CONFIGURACIÓN//
+
+    [Header("Raycast Settings")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float rayDistance = 100f;
     [SerializeField] private KeyCode shootKey = KeyCode.Mouse0;
-
-    [SerializeField] private PlayerController currentController;
-
-    [SerializeField] private GameObject playerGameObject;
-    private bool isPlayer = true;
-
     [SerializeField] private KeyCode returnKey = KeyCode.F;
 
+    [Header("Control Settings")]
+    [SerializeField] private PlayerFSM currentController;
+    [SerializeField] private GameObject playerGameObject;
+
+    private bool isPlayer = true;
+
+
+    //UPDATE//
     private void Update()
     {
         if (Input.GetKeyDown(shootKey))
-        {
             ShootRaycast();
-        }
 
         if (Input.GetKeyDown(returnKey) && !isPlayer)
-        {
             ReturnToPlayer();
-        }
 
         isPlayer = currentController != null && currentController.gameObject.CompareTag("Player");
-
     }
 
 
+    //CAMBIO DE OBJETO//
     private void ShootRaycast()
     {
         Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
         {
-            if (hit.collider.CompareTag("Controllable Object") || hit.collider.CompareTag("Player"))
-            {
-                GameObject newObj = hit.collider.gameObject;
+            if (!hit.collider.CompareTag("Controllable Object") && !hit.collider.CompareTag("Player"))
+                return;
 
-                if (currentController != null)
-                {
-                    Rigidbody oldRb = currentController.GetComponent<Rigidbody>();
-                    if (oldRb != null)
-                        oldRb.isKinematic = true;
+            GameObject newObj = hit.collider.gameObject;
 
-                    Destroy(currentController);
-                    currentController = null;
-                }
+            ClearCurrentController();
 
-                // Obtener o agregar nuevo controlador
-                PlayerController newController = newObj.GetComponent<PlayerController>();
-                if (newController == null)
-                    newController = newObj.AddComponent<PlayerController>();
+            PlayerFSM newController = GetOrAddController(newObj);
+            SetupCamera(newObj, newController);
+            SetupRigidbody(newObj, newController);
+            UpdateFlashlight(newController);
 
-                Transform newCameraPivot = newObj.transform;
-                cameraTransform.SetParent(newCameraPivot);
-                cameraTransform.localPosition = Vector3.zero;
-                cameraTransform.localRotation = Quaternion.identity;
-
-                newController.cameraPivot = cameraTransform;
-
-                Rigidbody rb = newObj.GetComponent<Rigidbody>();
-                if (rb == null)
-                    rb = newObj.AddComponent<Rigidbody>();
-
-                rb.isKinematic = false;
-
-                newController.SetRigidbody(rb);
-                newController.enabled = true;
-                currentController = newController;
-
-            }
+            currentController = newController;
         }
     }
 
+    private void ClearCurrentController()
+    {
+        if (currentController != null)
+        {
+            Rigidbody oldRb = currentController.GetComponent<Rigidbody>();
+            if (oldRb != null)
+                oldRb.isKinematic = true;
+
+            Destroy(currentController);
+            currentController = null;
+        }
+    }
+
+    private PlayerFSM GetOrAddController(GameObject obj)
+    {
+        PlayerFSM controller = obj.GetComponent<PlayerFSM>();
+        if (controller == null)
+            controller = obj.AddComponent<PlayerFSM>();
+
+        return controller;
+    }
+
+    private void SetupCamera(GameObject obj, PlayerFSM controller)
+    {
+        Transform newPivot = FindChildByName(obj.transform, "Camera Pivot");
+
+        if (newPivot == null)
+        {
+            Debug.LogError($"'{obj.name}' no tiene un hijo llamado 'Camera Pivot'");
+            return;
+        }
+
+        cameraTransform.SetParent(newPivot);
+        cameraTransform.localPosition = controller.CompareTag("Player") ? new Vector3(0f, 0.5f, 0f) : Vector3.zero;
+        cameraTransform.localRotation = Quaternion.identity;
+
+        controller.cameraPivot = cameraTransform;
+    }
+
+    private void SetupRigidbody(GameObject obj, PlayerFSM controller)
+    {
+        Rigidbody rb = obj.GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = obj.AddComponent<Rigidbody>();
+
+        rb.isKinematic = false;
+
+        controller.SetRigidbody(rb);
+        controller.enabled = true;
+    }
+
+    private void UpdateFlashlight(PlayerFSM controller)
+    {
+        FlashlightController flashlight = controller.GetComponentInChildren<FlashlightController>();
+        if (flashlight != null)
+            flashlight.SetIsPlayer(controller.CompareTag("Player"));
+    }
+
+
+    //RETORNAR PLAYER//
     private void ReturnToPlayer()
     {
-        // Si no está asignado, lo buscamos
         if (playerGameObject == null)
         {
             playerGameObject = GameObject.FindGameObjectWithTag("Player");
-
             if (playerGameObject == null)
             {
                 Debug.LogWarning("No se encontró ningún GameObject con el tag 'Player'.");
@@ -90,47 +126,12 @@ public class RaycastShoot_ObjectController : MonoBehaviour
             }
         }
 
-        // Desactivar el controlador actual
-        if (currentController != null)
-        {
-            Rigidbody oldRb = currentController.GetComponent<Rigidbody>();
-            if (oldRb != null)
-                oldRb.isKinematic = true; // Freezar objeto anterior
+        ClearCurrentController();
 
-            Destroy(currentController); // Elimina el script del objeto anterior
-            currentController = null;
-        }
-
-        // Obtener o agregar el controlador del jugador
-        PlayerController playerController = playerGameObject.GetComponent<PlayerController>();
-        if (playerController == null)
-            playerController = playerGameObject.AddComponent<PlayerController>();
-
-        // Mover la cámara
-        Transform newPivot = playerGameObject.transform.Find("Camera Holder");
-        if (newPivot == null)
-        {
-            Debug.LogWarning("No se encontró 'Camera Holder'. Usando el transform del jugador.");
-            newPivot = playerGameObject.transform;
-        }
-
-        cameraTransform.SetParent(newPivot);
-        cameraTransform.localPosition = Vector3.zero;
-        cameraTransform.localRotation = Quaternion.identity;
-
-        // Reasignar referencias
-        playerController.cameraPivot = cameraTransform;
-
-        Rigidbody rb = playerGameObject.GetComponent<Rigidbody>();
-        if (rb == null)
-            rb = playerGameObject.AddComponent<Rigidbody>();
-
-        //  Hacemos que el player se pueda mover y caiga
-        rb.isKinematic = false;
-        rb.useGravity = true;
-
-        playerController.SetRigidbody(rb);
-        playerController.enabled = true;
+        PlayerFSM playerController = GetOrAddController(playerGameObject);
+        SetupCameraToPlayer(playerGameObject, playerController);
+        SetupPlayerRigidbody(playerGameObject, playerController);
+        UpdateFlashlight(playerController);
 
         currentController = playerController;
         isPlayer = true;
@@ -138,5 +139,44 @@ public class RaycastShoot_ObjectController : MonoBehaviour
         Debug.Log("Control retornado al jugador.");
     }
 
-}
+    private void SetupCameraToPlayer(GameObject player, PlayerFSM controller)
+    {
+        Transform pivot = player.transform.Find("Camera Pivot");
+        if (pivot == null)
+        {
+            Debug.LogWarning("No se encontró 'Camera Pivot'. Usando el transform del jugador.");
+            pivot = player.transform;
+        }
 
+        cameraTransform.SetParent(pivot);
+        cameraTransform.localPosition = new Vector3(0f, 0.5f, 0f);
+        cameraTransform.localRotation = Quaternion.identity;
+
+        controller.cameraPivot = cameraTransform;
+    }
+
+    private void SetupPlayerRigidbody(GameObject player, PlayerFSM controller)
+    {
+        Rigidbody rb = player.GetComponent<Rigidbody>();
+        if (rb == null)
+            rb = player.AddComponent<Rigidbody>();
+
+        rb.isKinematic = false;
+        rb.useGravity = true;
+
+        controller.SetRigidbody(rb);
+        controller.enabled = true;
+    }
+
+
+    //MÉTODOS AUXILIARES//
+    private Transform FindChildByName(Transform parent, string name)
+    {
+        foreach (Transform child in parent.GetComponentsInChildren<Transform>(true))
+        {
+            if (child.name == name)
+                return child;
+        }
+        return null;
+    }
+}

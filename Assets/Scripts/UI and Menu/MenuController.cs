@@ -78,7 +78,7 @@ public class MenuController : MonoBehaviour
         Time.timeScale = 1f;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
-        SceneManager.LoadScene("Level1");
+        SceneManager.LoadScene("OutsideWorld");
     }
 
     public void LoadMainMenu()

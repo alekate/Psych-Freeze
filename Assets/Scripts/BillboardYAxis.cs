@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class BillboardYAxis : MonoBehaviour
 {
-    [SerializeField] private GameObject player;
+    private GameObject player;
 
     private void Awake()
     {

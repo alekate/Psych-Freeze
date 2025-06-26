@@ -16,6 +16,7 @@ public class FlashlightController : MonoBehaviour
 
     public bool IsEnabled = true;
 
+    private bool isPlayer = true;
 
     private void Awake()
     {
@@ -33,6 +34,13 @@ public class FlashlightController : MonoBehaviour
 
     private void Update()
     {
+        isPlayer = IsParentPlayer();
+
+        gameObject.SetActive(isPlayer);
+
+        if (!isPlayer) return;
+
+
         transform.position = _cameraObject.transform.position + _offset;
         transform.rotation = Quaternion.Slerp(transform.rotation, _cameraObject.transform.rotation, _speed * Time.deltaTime);
 
@@ -51,19 +59,11 @@ public class FlashlightController : MonoBehaviour
         if (Input.GetKeyUp(_toggleKey))
         {
             _audioSource.PlayOneShot(_offSFX);
-
-            if (IsOn == false)
-            {
-                _lightSource.gameObject.SetActive(true);
-                IsOn = true;
-            }
-            else
-            {
-                _lightSource.gameObject.SetActive(false);
-                IsOn = false;
-            }
+            _lightSource.SetActive(!IsOn);
+            IsOn = !IsOn;
         }
     }
+
 
     public void PlayFlashlightOffSFX()
     {
@@ -71,4 +71,32 @@ public class FlashlightController : MonoBehaviour
         _audioSource.PlayDelayed(2f);
         _audioSource.PlayOneShot(_offSFX);
     }
+
+    private bool IsParentPlayer()
+    {
+        Transform current = transform;
+
+        while (current.parent != null)
+        {
+            current = current.parent;
+
+            if (current.CompareTag("Player"))
+                return true;
+        }
+
+        return false;
+    }
+    public void SetIsPlayer(bool value)
+    {
+        IsEnabled = value;
+
+        if (!value)
+        {
+            _lightSource.SetActive(false);
+            IsOn = false;
+        }
+    }
+
+
+
 }
