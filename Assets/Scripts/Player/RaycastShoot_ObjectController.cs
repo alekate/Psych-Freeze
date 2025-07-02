@@ -17,7 +17,7 @@ public class RaycastShoot_ObjectController : MonoBehaviour
     [SerializeField] private GameObject playerGameObject;
 
     private bool isPlayer = true;
-
+    [SerializeField] private GameObject flashLight;
 
     //UPDATE//
     private void Update()
@@ -29,6 +29,16 @@ public class RaycastShoot_ObjectController : MonoBehaviour
             ReturnToPlayer();
 
         isPlayer = currentController != null && currentController.gameObject.CompareTag("Player");
+
+        if(flashLight == null)
+        {
+            flashLight = GameObject.FindWithTag("FlashLight");
+        }
+
+        if (playerGameObject == null)
+        {
+            playerGameObject = GameObject.FindWithTag("Player");
+        }
     }
 
 
@@ -38,18 +48,20 @@ public class RaycastShoot_ObjectController : MonoBehaviour
         Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
         if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
         {
-            if (!hit.collider.CompareTag("Controllable Object") && !hit.collider.CompareTag("Player"))
+            if (!hit.collider.CompareTag("Controllable Object"))
                 return;
 
             GameObject newObj = hit.collider.gameObject;
 
             ClearCurrentController();
 
+            playerGameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePosition;
+
+
             PlayerFSM newController = GetOrAddController(newObj);
             SetupCamera(newObj, newController);
             SetupRigidbody(newObj, newController);
-            UpdateFlashlight(newController);
-
+            flashLight.SetActive(false);
             currentController = newController;
         }
     }
@@ -105,17 +117,12 @@ public class RaycastShoot_ObjectController : MonoBehaviour
         controller.enabled = true;
     }
 
-    private void UpdateFlashlight(PlayerFSM controller)
-    {
-        FlashlightController flashlight = controller.GetComponentInChildren<FlashlightController>();
-        if (flashlight != null)
-            flashlight.SetIsPlayer(controller.CompareTag("Player"));
-    }
 
 
     //RETORNAR PLAYER//
     private void ReturnToPlayer()
     {
+
         if (playerGameObject == null)
         {
             playerGameObject = GameObject.FindGameObjectWithTag("Player");
@@ -131,10 +138,11 @@ public class RaycastShoot_ObjectController : MonoBehaviour
         PlayerFSM playerController = GetOrAddController(playerGameObject);
         SetupCameraToPlayer(playerGameObject, playerController);
         SetupPlayerRigidbody(playerGameObject, playerController);
-        UpdateFlashlight(playerController);
 
         currentController = playerController;
         isPlayer = true;
+
+        flashLight.SetActive(true);
 
         Debug.Log("Control retornado al jugador.");
     }
@@ -163,6 +171,7 @@ public class RaycastShoot_ObjectController : MonoBehaviour
 
         rb.isKinematic = false;
         rb.useGravity = true;
+        rb.constraints = RigidbodyConstraints.FreezeRotation;
 
         controller.SetRigidbody(rb);
         controller.enabled = true;

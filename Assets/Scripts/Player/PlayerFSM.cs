@@ -14,6 +14,12 @@ public class PlayerFSM : MonoBehaviour
     public bool isGrounded;
     public int jumps;
 
+    public Terrain terrain;
+    public float maxSlopeAngle;
+    public float currentSlopeAngle;
+
+
+
     private IPlayerState currentState;
     [SerializeField] private string currentStateName;
 

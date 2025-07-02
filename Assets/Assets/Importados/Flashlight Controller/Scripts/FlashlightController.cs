@@ -40,6 +40,7 @@ public class FlashlightController : MonoBehaviour
 
         if (!isPlayer) return;
 
+        IsEnabled = true;
 
         transform.position = _cameraObject.transform.position + _offset;
         transform.rotation = Quaternion.Slerp(transform.rotation, _cameraObject.transform.rotation, _speed * Time.deltaTime);

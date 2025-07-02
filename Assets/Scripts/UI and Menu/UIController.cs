@@ -47,7 +47,7 @@ public class UIController : MonoBehaviour
     public void UpdatePickupUI()
     {
         currentPickupText.text = pickupCounterScript.currentPickups.ToString();
-        allPickupsText.text = pickupCounterScript.allPickups.ToString();
+        allPickupsText.text = pickupCounterScript.allPickupsInLevel.ToString();
     }
 
     public void FinnishGameUI()

@@ -31,11 +31,6 @@ public class Pickup : MonoBehaviour
         }
     }
 
-    private void Update()
-    {
-        InstaWin();
-    }
-
     private IEnumerator FollowAndDestroy()
     {
         float followDuration = 0.5f;
@@ -49,19 +44,5 @@ public class Pickup : MonoBehaviour
         }
 
         Destroy(gameObject);
-    }
-    public void InstaWin()
-    {
-        if (cheatScript.cheatModeIsActive)
-        {
-            if (Input.GetKeyDown(KeyCode.L))
-            {
-                hasBeenCollected = true;
-                followPlayer = true;
-                pickupCounter.currentPickups++;
-
-                StartCoroutine(FollowAndDestroy());
-            }
-        }
     }
 }
