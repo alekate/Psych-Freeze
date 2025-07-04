@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.SearchService;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -12,12 +13,14 @@ public class PickupCounter : MonoBehaviour
     [SerializeField] private UIController UIController;
     [SerializeField] private MenuController menuController;
 
-    private static HashSet<string> levelsCounted = new(); // evita sumar dos veces un mismo nivel
+    public bool hasEnteredB1 = false;
+    public bool hasEnteredB2 = false;
 
+    private string currentScene;
     void Start()
     {
         currentPickups = 0;
-        UpdatePickupCounter();
+        currentScene = SceneManager.GetActiveScene().name;
     }
 
     private void Update()
@@ -27,15 +30,13 @@ public class PickupCounter : MonoBehaviour
 
     public void UpdatePickupCounter()
     {
-        string currentScene = SceneManager.GetActiveScene().name;
 
-        if (currentScene != "OutsideWorld" && !levelsCounted.Contains(currentScene))
+        if (currentScene != "OutsideWorld")
         {
             GameObject[] pickups = GameObject.FindGameObjectsWithTag("Pickup");
             allPickupsInLevel = pickups.Length;
 
             totalPickupsToFinishGame += allPickupsInLevel;
-            levelsCounted.Add(currentScene);
         }
     }
 
@@ -46,7 +47,7 @@ public class PickupCounter : MonoBehaviour
 
     private void CheckIfAllPickupsCollected()
     {
-        if (currentPickups >= totalPickupsToFinishGame && totalPickupsToFinishGame > 0)
+        if (currentPickups >= totalPickupsToFinishGame && totalPickupsToFinishGame > 0 && hasEnteredB1 == true && hasEnteredB2 == true)
         {
             UIController.ReturnToOutsideWorldUI();
 

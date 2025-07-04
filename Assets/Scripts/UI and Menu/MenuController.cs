@@ -7,6 +7,8 @@ public class MenuController : MonoBehaviour
     [SerializeField] private GameObject gameplayUI;
     [SerializeField] private GameObject pauseUI;
     [SerializeField] private GameObject tutorialUI;
+    [SerializeField] private GameObject optionsUI;
+
 
     [SerializeField] private bool isPaused;
     [SerializeField] private bool showTutorial = true;
@@ -40,6 +42,7 @@ public class MenuController : MonoBehaviour
     {
         isPaused = true;
         gameplayUI.SetActive(false);
+        optionsUI.SetActive(false);
         pauseUI.SetActive(true);
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
@@ -50,6 +53,7 @@ public class MenuController : MonoBehaviour
     {
         isPaused = false;
         gameplayUI.SetActive(true);
+        optionsUI.SetActive(false);
         pauseUI.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;

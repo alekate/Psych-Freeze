@@ -15,13 +15,6 @@ namespace Clase09
         [field: SerializeField] public Transform previousState { get; private set; } // Donde aparece el jugador al entrar
         [field: SerializeField] public List<GameObject> gameObjects { get; private set; } = new List<GameObject>(); // Cosas para activar/desactivar
 
-        ////////// CUANDO LA ESCENA SE INICIA, AVISA QUE ESTÁ LISTA //////////
-
-        private void Start()
-        {
-            onLoadedScene?.Invoke(this); // Avisa al GameManager u otros que esta escena ya está cargada
-        }
-
         ////////// ACTIVA O DESACTIVA TODOS LOS OBJETOS DE ESTA ESCENA //////////
 
         public void SetActiveGo(bool state)
