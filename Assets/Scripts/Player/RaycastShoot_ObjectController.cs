@@ -1,11 +1,10 @@
 using Clase10;
+using EasyTransition;
 using UnityEngine;
+using System.Collections;
 
 public class RaycastShoot_ObjectController : MonoBehaviour
 {
-
-    //CONFIGURACIÓN//
-
     [Header("Raycast Settings")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private float rayDistance = 100f;
@@ -19,51 +18,86 @@ public class RaycastShoot_ObjectController : MonoBehaviour
     private bool isPlayer = true;
     [SerializeField] private GameObject flashLight;
 
-    //UPDATE//
+    [Header("Transition")]
+    [SerializeField] TransitionSettings transition;
+    TransitionManager transitionManager;
+
+    private void Start()
+    {
+        transitionManager = TransitionManager.Instance();
+    }
+
     private void Update()
     {
         if (Input.GetKeyDown(shootKey))
-            ShootRaycast();
+            StartCoroutine(ShootRaycastCoroutine());
 
         if (Input.GetKeyDown(returnKey) && !isPlayer)
-            ReturnToPlayer();
+            StartCoroutine(ReturnToPlayerCoroutine());
 
         isPlayer = currentController != null && currentController.gameObject.CompareTag("Player");
 
-        if(flashLight == null)
-        {
+        if (flashLight == null)
             flashLight = GameObject.FindWithTag("FlashLight");
-        }
 
         if (playerGameObject == null)
-        {
             playerGameObject = GameObject.FindWithTag("Player");
-        }
     }
 
-
-    //CAMBIO DE OBJETO//
-    private void ShootRaycast()
+    private IEnumerator ShootRaycastCoroutine()
     {
         Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, rayDistance))
+        if (!Physics.Raycast(ray, out RaycastHit hit, rayDistance))
+            yield break;
+
+        if (!hit.collider.CompareTag("Controllable Object"))
+            yield break;
+
+        // Transición visual
+        transitionManager.Transition(transition, 0f);
+
+        float totalTime = transition.transitionTime;
+        yield return new WaitForSeconds(totalTime);
+
+        GameObject newObj = hit.collider.gameObject;
+
+        ClearCurrentController();
+
+        playerGameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePosition;
+
+        PlayerFSM newController = GetOrAddController(newObj);
+        SetupCamera(newObj, newController);
+        SetupRigidbody(newObj, newController);
+        flashLight.SetActive(false);
+        currentController = newController;
+    }
+
+    private IEnumerator ReturnToPlayerCoroutine()
+    {
+        if (playerGameObject == null)
         {
-            if (!hit.collider.CompareTag("Controllable Object"))
-                return;
-
-            GameObject newObj = hit.collider.gameObject;
-
-            ClearCurrentController();
-
-            playerGameObject.GetComponent<Rigidbody>().constraints = RigidbodyConstraints.FreezePosition;
-
-
-            PlayerFSM newController = GetOrAddController(newObj);
-            SetupCamera(newObj, newController);
-            SetupRigidbody(newObj, newController);
-            flashLight.SetActive(false);
-            currentController = newController;
+            playerGameObject = GameObject.FindGameObjectWithTag("Player");
+            if (playerGameObject == null)
+            {
+                Debug.LogWarning("No se encontró ningún GameObject con el tag 'Player'.");
+                yield break;
+            }
         }
+
+        transitionManager.Transition(transition, 0f);
+        float totalTime = transition.transitionTime;
+        yield return new WaitForSeconds(totalTime);
+
+        ClearCurrentController();
+
+        PlayerFSM playerController = GetOrAddController(playerGameObject);
+        SetupCameraToPlayer(playerGameObject, playerController);
+        SetupPlayerRigidbody(playerGameObject, playerController);
+
+        currentController = playerController;
+        isPlayer = true;
+
+        flashLight.SetActive(true);
     }
 
     private void ClearCurrentController()
@@ -117,36 +151,6 @@ public class RaycastShoot_ObjectController : MonoBehaviour
         controller.enabled = true;
     }
 
-
-
-    //RETORNAR PLAYER//
-    private void ReturnToPlayer()
-    {
-
-        if (playerGameObject == null)
-        {
-            playerGameObject = GameObject.FindGameObjectWithTag("Player");
-            if (playerGameObject == null)
-            {
-                Debug.LogWarning("No se encontró ningún GameObject con el tag 'Player'.");
-                return;
-            }
-        }
-
-        ClearCurrentController();
-
-        PlayerFSM playerController = GetOrAddController(playerGameObject);
-        SetupCameraToPlayer(playerGameObject, playerController);
-        SetupPlayerRigidbody(playerGameObject, playerController);
-
-        currentController = playerController;
-        isPlayer = true;
-
-        flashLight.SetActive(true);
-
-        Debug.Log("Control retornado al jugador.");
-    }
-
     private void SetupCameraToPlayer(GameObject player, PlayerFSM controller)
     {
         Transform pivot = player.transform.Find("Camera Pivot");
@@ -177,8 +181,6 @@ public class RaycastShoot_ObjectController : MonoBehaviour
         controller.enabled = true;
     }
 
-
-    //MÉTODOS AUXILIARES//
     private Transform FindChildByName(Transform parent, string name)
     {
         foreach (Transform child in parent.GetComponentsInChildren<Transform>(true))

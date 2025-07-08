@@ -6,11 +6,14 @@ public class BillboardYAxis : MonoBehaviour
 
     private void Awake()
     {
-        player = GameObject.FindWithTag("Player");
+        player = GameObject.FindWithTag("MainCamera");
     }
     void Update()
     {
-        if (player == null) return;
+        if (player == null)
+        {
+            player = GameObject.FindWithTag("MainCamera");
+        }
 
         Vector3 targetPosition = player.transform.position;
 

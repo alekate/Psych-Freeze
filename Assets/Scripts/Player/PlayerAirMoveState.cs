@@ -31,10 +31,9 @@ public class PlayerAirMoveState : IPlayerState
         float v = Input.GetAxis("Vertical");
 
         Vector3 inputDir = player.cameraPivot.forward * v + player.cameraPivot.right * h;
-        inputDir.y = 0f;
         inputDir.Normalize();
 
-        if (inputDir.sqrMagnitude > 0.01f)
+        if (inputDir.magnitude > 0.01f)
         {
             Vector3 airForce = inputDir * player.airControlForce;
             player.rb.AddForce(airForce, ForceMode.Acceleration);

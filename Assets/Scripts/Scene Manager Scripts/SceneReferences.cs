@@ -6,10 +6,6 @@ namespace Clase09
 {
     public class SceneReferences : MonoBehaviour
     {
-        ////////// EVENTO QUE SE DISPARA CUANDO ESTA ESCENA ESTÁ LISTA //////////
-
-        public static event Action<SceneReferences> onLoadedScene;
-
         ////////// DATOS DE ESTA ESCENA //////////
 
         [field: SerializeField] public Transform previousState { get; private set; } // Donde aparece el jugador al entrar

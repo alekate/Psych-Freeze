@@ -5690,7 +5690,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: eb3769097c0cac840ac6a79380929ea7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameManager: {fileID: 0}
   sceneToLoad: OutsideWorld
 --- !u!4 &658827819
 Transform:

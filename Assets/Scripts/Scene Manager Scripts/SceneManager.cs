@@ -29,12 +29,20 @@ namespace Clase09
 
         public void ChangeSceneTo(string sceneName)
         {
+            if (SceneManager.GetSceneByName(sceneName).isLoaded)
+            {
+                Debug.LogWarning($"La escena '{sceneName}' ya está cargada. Cancelando carga duplicada.");
+                onLoadedScene?.Invoke();
+                return;
+            }
+
             if (loadingScene == null)
             {
                 loadingScene = LoadingScene(sceneName);
                 StartCoroutine(loadingScene);
             }
         }
+
 
         ////////// COROUTINE PARA CARGAR UNA ESCENA CON BARRA DE CARGA FALSA Y REAL //////////
 

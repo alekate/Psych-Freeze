@@ -106,7 +106,7 @@ public class MenuController : MonoBehaviour
     }
 
 
-    private IEnumerator SlowDownTime()
+    public IEnumerator SlowDownTime()
     {
         float elapsed = 0f;
 
@@ -121,7 +121,7 @@ public class MenuController : MonoBehaviour
         Time.timeScale = 0f;
     }
 
-    private IEnumerator SpeedUpTime()
+    public IEnumerator SpeedUpTime()
     {
         float elapsed = 0f;
 

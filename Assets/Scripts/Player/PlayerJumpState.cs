@@ -3,10 +3,9 @@ using UnityEngine;
 public class PlayerJumpState : IPlayerState
 {
     private PlayerFSM player;
-    private bool jumped;
-    private bool instantJump;
+    private readonly bool instantJump;
 
-    public PlayerJumpState(bool jumpNow = false) //Semi hardcodeo para que el salto no se retrase
+    public PlayerJumpState(bool jumpNow = false)
     {
         instantJump = jumpNow;
     }
@@ -14,11 +13,10 @@ public class PlayerJumpState : IPlayerState
     public void Enter(PlayerFSM player)
     {
         this.player = player;
-        jumped = false;
 
         if (instantJump)
         {
-            Jump();
+            PerformJump();
             player.SwitchState(new PlayerAirMoveState());
         }
     }
@@ -33,34 +31,28 @@ public class PlayerJumpState : IPlayerState
 
     public void FixedUpdate()
     {
-        if (!instantJump && !jumped)
+        if (!instantJump)
         {
-            Jump();
-            jumped = true;
+            PerformJump();
             player.SwitchState(new PlayerAirMoveState());
         }
 
-        CheckGrounded();
+        UpdateGroundedStatus();
     }
 
     public void Exit() { }
 
-    private void Jump()
+    private void PerformJump()
     {
-        Vector3 vel = player.rb.velocity;
-        vel.y = 0f;
-        player.rb.velocity = vel;
-
-        // aplicar impulso de salto
         player.rb.AddForce(Vector3.up * player.jumpForce, ForceMode.Impulse);
         player.jumps++;
     }
 
-
-    private void CheckGrounded()
+    private void UpdateGroundedStatus()
     {
         bool wasGrounded = player.isGrounded;
         player.isGrounded = Physics.Raycast(player.transform.position, Vector3.down, 1.1f, player.groundLayer);
+
         if (player.isGrounded && !wasGrounded)
         {
             player.jumps = 0;

@@ -7,62 +7,55 @@ using UnityEngine.SceneManagement;
 
 public class UIController : MonoBehaviour
 {
-    [Header("Player")]
-
-
-    [Header("Pickups")]
-    [SerializeField] private PickupCounter pickupCounterScript;
-    [SerializeField] private TextMeshProUGUI currentPickupText;
-    [SerializeField] private TextMeshProUGUI allPickupsText;
     [SerializeField] private TextMeshProUGUI youWinText;
     [SerializeField] private TextMeshProUGUI youLoseText;
 
-    [SerializeField] private TextMeshProUGUI returnToOutsideWorldText;
-    [SerializeField] private TextMeshProUGUI countdownOutsideWorldText;
+    [Header("Timer UI")]
+    [SerializeField] private TextMeshProUGUI timer;
 
+
+    public MenuController menuController;
 
     private void Start()
     {
         youLoseText.gameObject.SetActive(false);
         youWinText.gameObject.SetActive(false);
-
-    }
-    void Update()
-    {
-        if (SceneManager.GetActiveScene().name != "OutsideWorld")
-        {
-            currentPickupText.gameObject.SetActive(true);
-            allPickupsText.gameObject.SetActive(true);
-        }
-        else
-        {
-            currentPickupText.gameObject.SetActive(false);
-            allPickupsText.gameObject.SetActive(false);
-            returnToOutsideWorldText.gameObject.SetActive(false);
-        }
-
-        UpdatePickupUI();
-    }
-
-    public void UpdatePickupUI()
-    {
-        currentPickupText.text = pickupCounterScript.currentPickups.ToString();
-        allPickupsText.text = pickupCounterScript.allPickupsInLevel.ToString();
+        timer.gameObject.SetActive(true);
     }
 
     public void FinnishGameUI()
     {
         youWinText.gameObject.SetActive(true);
-    }
-
-    public void ReturnToOutsideWorldUI()
-    {
-        returnToOutsideWorldText.gameObject.SetActive(true);
+        StartCoroutine(menuController.SlowDownTime());
     }
 
     public void LoseGameUI()
     {
         youLoseText.gameObject.SetActive(true);
+        timer.gameObject.SetActive(false);
+        StartCoroutine(menuController.SlowDownTime());
+    }
+
+    public void UpdateTimerUI(float timeRemaining)
+    {
+        if (timer == null) return;
+
+        if (timeRemaining <= 0f)
+        {
+            timer.gameObject.SetActive(false);
+            return;
+        }
+
+
+        int minutes = Mathf.FloorToInt(timeRemaining / 60f);
+        int seconds = Mathf.FloorToInt(timeRemaining % 60f);
+        timer.text = $"Exporuse resistence: {minutes:00}:{seconds:00}";
+        timer.gameObject.SetActive(true);
+    }
+
+    public void ResetTimerUI()
+    {
+        timer.gameObject.SetActive(false);
     }
 
 }

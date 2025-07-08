@@ -7,29 +7,56 @@ namespace Clase09
     public class GameManager : MonoBehaviourSingleton<GameManager>
     {
         private GameObject player;
-        private PickupCounter pickupCounter;
+        public string lastSceneLoaded;
 
-        public string LastDoorEntered;
-        private string lastSceneLoaded;
+        public string LastDoorEntered { get; set; }
+        public string PreviousDoorEntered { get; set; }
+
+        [field: SerializeField] public bool hasEnteredB1 { get; private set; }
+        [field: SerializeField] public bool hasEnteredB2 { get; private set; }
+
+        [SerializeField] GameObject building1Beam;
+        [SerializeField] GameObject building2Beam;
+
+        [SerializeField] float spawnOffset;
+
+        [SerializeField] private OutsideWorldTimer outsideWorldTimer;
+        [SerializeField] private UIController UIController;
+
 
         protected override void OnAwaken()
         {
+            if (FindObjectsOfType<GameManager>().Length > 1)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             player = GameObject.FindWithTag("Player");
-            pickupCounter = player.GetComponent<PickupCounter>();
+
+            lastSceneLoaded = SceneManager.GetActiveScene().name;
 
             CustomSceneManager.onLoadedScene += () => StartCoroutine(OnSceneLoaded());
+
+            if (lastSceneLoaded == "OutsideWorld" && outsideWorldTimer != null)
+            {
+                outsideWorldTimer.gameObject.SetActive(true);
+                outsideWorldTimer.StartTimer();
+            }
+
         }
+
 
         protected override void OnDestroy()
         {
-            CustomSceneManager.onLoadedScene += () => StartCoroutine(OnSceneLoaded());
+            CustomSceneManager.onLoadedScene -= () => StartCoroutine(OnSceneLoaded());
         }
 
         public void Load(string sceneToLoad)
         {
             lastSceneLoaded = sceneToLoad;
 
-            SceneReferences currentSceneRefs = FindSceneReferencesInScene(player.scene);
+            var currentSceneRefs = FindSceneReferencesInScene(player.scene);
             if (currentSceneRefs != null)
             {
                 currentSceneRefs.previousState.position = player.transform.position;
@@ -40,43 +67,51 @@ namespace Clase09
             CustomSceneManager.Instance.ChangeSceneTo(sceneToLoad);
         }
 
+        public void Unload(string sceneToUnload)
+        {
+            SceneManager.UnloadSceneAsync(sceneToUnload);
+        }
+
         private IEnumerator OnSceneLoaded()
         {
             Scene newScene = SceneManager.GetSceneByName(lastSceneLoaded);
             SceneManager.SetActiveScene(newScene);
 
-            Scene currentActive = player.scene;
-            SceneReferences previousRefs = FindSceneReferencesInScene(currentActive);
-            if (previousRefs != null)
-                previousRefs.SetActiveGo(false);
+            // Desactivar escena anterior
+            var previousRefs = FindSceneReferencesInScene(player.scene);
+            previousRefs?.SetActiveGo(false);
 
             yield return null;
 
+            var sceneRefs = FindSceneReferencesInScene(newScene);
+            sceneRefs?.SetActiveGo(true);
+
+            // Esperar a que el SpawnPoint esté disponible (si no es OutsideWorld)
             GameObject spawn = null;
-            float timer = 0f;
-            while (spawn == null && timer < 1f)
+            if (lastSceneLoaded != "OutsideWorld")
             {
-                spawn = GameObject.FindWithTag("SpawnPoint");
-                timer += Time.deltaTime;
-                yield return null;
+                float timer = 0f;
+                while (spawn == null && timer < 1f)
+                {
+                    spawn = GameObject.FindWithTag("SpawnPoint");
+                    timer += Time.deltaTime;
+                    yield return null;
+                }
             }
 
-            SceneReferences sceneRefs = FindSceneReferencesInScene(newScene);
-            if (sceneRefs != null)
-                sceneRefs.SetActiveGo(true);
-
+            // Spawn del jugador
             if (lastSceneLoaded == "OutsideWorld")
             {
-                GameObject door = GameObject.Find(LastDoorEntered);
+                GameObject door = GameObject.Find(PreviousDoorEntered);
                 if (door != null)
                 {
-                    Vector3 offset = door.transform.forward * 2f;
+                    Vector3 offset = door.transform.up * spawnOffset;
                     player.transform.position = door.transform.position + offset;
                     player.transform.rotation = Quaternion.LookRotation(door.transform.forward);
                 }
                 else
                 {
-                    Debug.LogWarning("No se encontró la puerta " + LastDoorEntered);
+                    Debug.LogWarning("No se encontró la puerta " + PreviousDoorEntered);
                 }
             }
             else if (spawn != null)
@@ -90,29 +125,38 @@ namespace Clase09
             }
 
             player.SetActive(true);
-            pickupCounter.UpdatePickupCounter();
 
-            // Flags por edificio
-            if (lastSceneLoaded == "Building1")
-                pickupCounter.hasEnteredB1 = true;
-            if (lastSceneLoaded == "Building2")
-                pickupCounter.hasEnteredB2 = true;
-        }
+            if (lastSceneLoaded == "OutsideWorld")
+            {
+                outsideWorldTimer?.gameObject.SetActive(true);
+                outsideWorldTimer?.StartTimer();
+            }
+            else if (lastSceneLoaded == "Building1")
+            {
+                hasEnteredB1 = true;
+                building1Beam.SetActive(false);
+                building2Beam.SetActive(true);
 
+                outsideWorldTimer?.ResetTimer();
+                UIController?.ResetTimerUI();
+            }
+            else if (lastSceneLoaded == "Building2")
+            {
+                hasEnteredB2 = true;
+                building1Beam.SetActive(false);
+                building2Beam.SetActive(false);
 
-
-        public void Unload(string sceneToUnload)
-        {
-            SceneManager.UnloadSceneAsync(sceneToUnload);
+                outsideWorldTimer?.ResetTimer();
+                UIController?.ResetTimerUI();
+            }
         }
 
         private SceneReferences FindSceneReferencesInScene(Scene scene)
         {
-            foreach (GameObject root in scene.GetRootGameObjects())
+            foreach (var root in scene.GetRootGameObjects())
             {
-                SceneReferences sr = root.GetComponentInChildren<SceneReferences>();
-                if (sr != null)
-                    return sr;
+                var sr = root.GetComponentInChildren<SceneReferences>();
+                if (sr != null) return sr;
             }
 
             return null;
