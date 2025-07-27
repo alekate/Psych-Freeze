@@ -13,15 +13,14 @@ public class PlayerAirMoveState : IPlayerState
     {
         if (player.isGrounded)
         {
-            player.SwitchState(new PlayerIdleState());
+            player.SwitchState(player.idleState);
         }
+
+        ApplyAirControl();
+        player.HandleCameraMovement();
     }
 
-    public void FixedUpdate()
-    {
-        ApplyAirControl();
-        CheckGrounded();
-    }
+    public void FixedUpdate() { }
 
     public void Exit() { }
 
@@ -37,16 +36,6 @@ public class PlayerAirMoveState : IPlayerState
         {
             Vector3 airForce = inputDir * player.airControlForce;
             player.rb.AddForce(airForce, ForceMode.Acceleration);
-        }
-    }
-
-    private void CheckGrounded()
-    {
-        bool wasGrounded = player.isGrounded;
-        player.isGrounded = Physics.Raycast(player.transform.position, Vector3.down, 1.1f, player.groundLayer);
-        if (player.isGrounded && !wasGrounded)
-        {
-            player.jumps = 0;
         }
     }
 }

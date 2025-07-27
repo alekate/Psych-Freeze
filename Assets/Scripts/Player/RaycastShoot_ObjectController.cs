@@ -2,6 +2,7 @@ using Clase10;
 using EasyTransition;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems; 
 
 public class RaycastShoot_ObjectController : MonoBehaviour
 {
@@ -22,6 +23,10 @@ public class RaycastShoot_ObjectController : MonoBehaviour
     [SerializeField] TransitionSettings transition;
     TransitionManager transitionManager;
 
+
+    private Transform currentHighlighted;
+    private Outline currentOutline;
+
     private void Start()
     {
         transitionManager = TransitionManager.Instance();
@@ -29,6 +34,54 @@ public class RaycastShoot_ObjectController : MonoBehaviour
 
     private void Update()
     {
+        // ----------- Lógica outline hover  -----------
+        Ray rayHover = new Ray(cameraTransform.position, cameraTransform.forward);
+        if (Physics.Raycast(rayHover, out RaycastHit hitHover, rayDistance))
+        {
+            Transform hitTransform = hitHover.transform;
+
+            if (hitTransform.CompareTag("Controllable Object"))
+            {
+                // Si es un nuevo objeto distinto al resaltado actualmente
+                if (hitTransform != currentHighlighted)
+                {
+                    if (currentOutline != null)
+                        currentOutline.enabled = false;
+
+                    Outline outline = hitTransform.GetComponent<Outline>();
+                    if (outline == null)
+                    {
+                        outline = hitTransform.gameObject.AddComponent<Outline>();
+                        outline.OutlineColor = Color.white;
+                        outline.OutlineWidth = 10f;
+                    }
+                    outline.enabled = true;
+
+                    currentHighlighted = hitTransform;
+                    currentOutline = outline;
+                }
+            }
+            else
+            {
+                if (currentOutline != null)
+                    currentOutline.enabled = false;
+
+                currentHighlighted = null;
+                currentOutline = null;
+            }
+        }
+        else
+        {
+            if (currentOutline != null)
+                currentOutline.enabled = false;
+
+            currentHighlighted = null;
+            currentOutline = null;
+        }
+        // ---------------------------------------------
+
+
+
         if (Input.GetKeyDown(shootKey))
             StartCoroutine(ShootRaycastCoroutine());
 

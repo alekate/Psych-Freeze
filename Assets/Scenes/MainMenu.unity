@@ -834,7 +834,7 @@ GameObject:
   - component: {fileID: 197921722}
   - component: {fileID: 197921721}
   - component: {fileID: 197921720}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: DoorSceneChanger (Building2)
   m_TagString: DoorSceneChanger
   m_Icon: {fileID: 0}
@@ -8701,7 +8701,7 @@ GameObject:
   - component: {fileID: 1297671917}
   - component: {fileID: 1297671913}
   - component: {fileID: 1297671916}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: DoorSceneChanger (Building1)
   m_TagString: DoorSceneChanger
   m_Icon: {fileID: 0}
@@ -10726,7 +10726,7 @@ GameObject:
   - component: {fileID: 1725602276}
   m_Layer: 0
   m_Name: MainCamera
-  m_TagString: Player
+  m_TagString: MainCamera
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

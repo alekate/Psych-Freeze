@@ -15,7 +15,7 @@ public class PlayerMoveState : IPlayerState
     {
         if (Input.GetKeyDown(KeyCode.Space) && player.jumps < player.maxJumps)
         {
-            player.SwitchState(new PlayerJumpState(true));
+            player.SwitchState(player.jumpState);
         }
 
         float h = Input.GetAxis("Horizontal");
@@ -23,16 +23,12 @@ public class PlayerMoveState : IPlayerState
 
         if (h == 0 && v == 0)
         {
-            player.SwitchState(new PlayerIdleState());
+            player.SwitchState(player.idleState);
         }
+
     }
 
-    public void FixedUpdate()
-    {
-        Move();
-        CheckGrounded();
-        CameraMovement();
-    }
+    public void FixedUpdate() { player.HandleCameraMovement(); Move(); }
 
     public void Exit() { }
 
@@ -57,8 +53,11 @@ public class PlayerMoveState : IPlayerState
         if (player.terrain == null)
         {
             player.terrain = Terrain.activeTerrain;
+
             if (player.terrain == null)
+            {
                 return true;
+            }
         }
 
         Vector3 currentPos = player.rb.position;
@@ -82,34 +81,6 @@ public class PlayerMoveState : IPlayerState
         Vector3 terrainPos = player.terrain.transform.position;
         Vector3 size = player.terrain.terrainData.size;
 
-        return new Vector3(
-            (worldPos.x - terrainPos.x) / size.x,
-            0,
-            (worldPos.z - terrainPos.z) / size.z
-        );
-    }
-
-    private void CameraMovement()
-    {
-        float mouseX = Input.GetAxis("Mouse X") * 7f;
-        float mouseY = Input.GetAxis("Mouse Y") * 7f;
-
-        player.turn.x += mouseX;
-        player.turn.y -= mouseY;
-        player.turn.y = Mathf.Clamp(player.turn.y, -35f, 35f);
-
-        player.transform.localRotation = Quaternion.Euler(0f, player.turn.x, 0f);
-        if (player.cameraPivot != null)
-            player.cameraPivot.localRotation = Quaternion.Euler(player.turn.y, 0f, 0f);
-    }
-
-    private void CheckGrounded()
-    {
-        bool wasGrounded = player.isGrounded;
-        player.isGrounded = Physics.Raycast(player.transform.position, Vector3.down, 1.1f, player.groundLayer);
-        if (player.isGrounded && !wasGrounded)
-        {
-            player.jumps = 0;
-        }
+        return new Vector3((worldPos.x - terrainPos.x) / size.x, 0, (worldPos.z - terrainPos.z) / size.z);
     }
 }

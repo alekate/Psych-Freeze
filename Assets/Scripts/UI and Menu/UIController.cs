@@ -49,7 +49,7 @@ public class UIController : MonoBehaviour
 
         int minutes = Mathf.FloorToInt(timeRemaining / 60f);
         int seconds = Mathf.FloorToInt(timeRemaining % 60f);
-        timer.text = $"Exporuse resistence: {minutes:00}:{seconds:00}";
+        timer.text = $"Exporuse resistance: {minutes:00}:{seconds:00}";
         timer.gameObject.SetActive(true);
     }
 
