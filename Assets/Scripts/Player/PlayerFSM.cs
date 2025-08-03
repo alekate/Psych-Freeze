@@ -19,7 +19,7 @@ public class PlayerFSM : MonoBehaviour
     public int jumps;
 
     public Terrain terrain;
-    public float maxSlopeAngle;
+    public float maxSlopeAngle = 45f;
     public float currentSlopeAngle;
 
     public IPlayerState idleState;
@@ -54,6 +54,8 @@ public class PlayerFSM : MonoBehaviour
     private void Update()
     {
        currentState?.Update();
+
+        currentStateName = currentState.ToString();
     }
 
     private void FixedUpdate()

@@ -40,24 +40,20 @@ public class PlayerJumpState : IPlayerState
 
     private void PerformJump()
     {
-        // Dirección horizontal según la entrada del jugador
         Vector3 inputDirection = player.cameraPivot.forward * Input.GetAxis("Vertical") +
                                  player.cameraPivot.right * Input.GetAxis("Horizontal");
         inputDirection.y = 0;
         inputDirection.Normalize();
 
-        // Calculamos nueva velocidad horizontal (respetando momentum, pero más controlado)
         Vector3 currentHorizontalVelocity = player.rb.velocity;
         currentHorizontalVelocity.y = 0;
 
         Vector3 desiredDirection = inputDirection * player.moveSpeed;
 
-        // Combinamos la dirección deseada con el momentum actual (puede ajustarse)
         Vector3 combinedHorizontal = Vector3.Lerp(currentHorizontalVelocity, desiredDirection, 0.5f);
 
-        // Mantenemos la velocidad horizontal y agregamos salto vertical
         Vector3 finalVelocity = combinedHorizontal;
-        finalVelocity.y = 0f; // reseteamos solo el eje Y para aplicar el salto con fuerza limpia
+        finalVelocity.y = 0f; 
 
         player.rb.velocity = finalVelocity;
         player.rb.AddForce(Vector3.up * player.jumpForce, ForceMode.Impulse);

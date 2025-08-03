@@ -1,4 +1,3 @@
-using Clase10;
 using EasyTransition;
 using UnityEngine;
 using System.Collections;
