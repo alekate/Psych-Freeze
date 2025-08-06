@@ -3,7 +3,7 @@ public class PlayerFSM : MonoBehaviour
 {
     public float moveSpeed = 5f;
     public float jumpForce = 5f;
-    public float airControlForce = 5f;
+    public float airControlForce = 3f;
     public int maxJumps = 2;
     public Transform cameraPivot;
 
